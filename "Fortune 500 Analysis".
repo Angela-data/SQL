@@ -1,3 +1,5 @@
+#This analysis utilized the following Fortune 500 dataset:
+
 CREATE TABLE fortune_companies (
     company_id INTEGER PRIMARY KEY,
     company_name TEXT,
@@ -56,82 +58,36 @@ VALUES
     ('Company JJ', 'Manufacturing', 370.0, 3100, 1, 20, 12, 7.6),
     ('Company KK', 'Healthcare', 150.2, 3400, 0, 16, 8, 5.3);
 
-SELECT*
-FROM fortune_companies;
+# Analysis: 
 
-Group by industry and calculate the total paid time off days, while filtering industries where the total exceeds 20 days off.
-SELECT 
-    industry,
-    SUM(paid_time_off_days) AS total_days_off,
-    AVG(employees) AS avg_employees
-FROM 
-    fortune_companies
-GROUP BY 
-    industry
-HAVING 
-    SUM(paid_time_off_days) > 20;
+# Assign all the companies in the Healthcare industry as "mother friendly workplace", "acceptable", or "abysmal" based on the maternity leave offered. 
+SELECT
+company_name,
+CASE 
+  WHEN maternity_leave_weeks >= 10 THEN 'mother friendly workplace'
+  WHEN maternity_leave_weeks >= 8 THEN 'acceptable'
+  ELSE 'abysmal'
+END as mother_friendliness
+FROM fortune_companies
+WHERE industry='Healthcare'
+;
 
+# Which industries have an average revenue of at least $200 Billion, and what are their avg revenues?
+SELECT industry, ROUND(AVG(revenue),1) as avg_revenue_billions
+FROM fortune_companies
+GROUP BY industry
+HAVING avg_revenue_billions>=200
+;
 
-Categorize industries based on total paid time off days, and categorize each industry into High PTO, Moderate PTo and Low PTO.    
-  SELECT 
-    industry,
-    SUM(paid_time_off_days) AS total_days_off,
-    CASE 
-        WHEN SUM(paid_time_off_days) > 120 THEN 'High PTO'
-        WHEN SUM(paid_time_off_days) BETWEEN 80 AND 120 THEN 'Moderate PTO'
-        ELSE 'Low PTO'
-    END AS pto_category
-FROM 
-    fortune_companies
-GROUP BY 
-    industry
-HAVING 
-    SUM(paid_time_off_days) > 20;  
+# Which companies have healthcare benefits *and* at least 20 paid time off days?
+SELECT company_name
+FROM fortune_companies
+WHERE paid_time_off_days>20
+AND healthcare_benefits=1
+;
 
-
- Categorize industries based on the average paid time off days,   
-    SELECT 
-    industry,
-    AVG(paid_time_off_days) AS avg_days_off,
-    CASE 
-        WHEN AVG(paid_time_off_days) > 20 THEN 'High Average PTO'
-        WHEN AVG(paid_time_off_days) BETWEEN 15 AND 20 THEN 'Moderate Average PTO'
-        ELSE 'Low Average PTO'
-    END AS pto_category
-FROM 
-    fortune_companies
-GROUP BY 
-    industry
-HAVING 
-    AVG(paid_time_off_days) > 20;
-
-Count the number of companies in each industry. Group by industry and filter to include only industries with more than 3.   
-    SELECT 
-    industry,
-    AVG(paid_time_off_days) AS avg_days_off
-FROM 
-    fortune_companies
-WHERE 
-    healthcare_benefits = 1 -- Filter industries offering healthcare benefits
-    AND maternity_leave_weeks > 10 -- Filter industries with maternity leave greater than 10 weeks
-GROUP BY 
-    industry
-HAVING 
-    AVG(paid_time_off_days) > 15;
-Categorize industries based on number of companies, by large and medium.
-    SELECT 
-    industry,
-    COUNT(company_id) AS company_count,
-    CASE 
-        WHEN COUNT(company_id) > 5 THEN 'Large Industry'
-        WHEN COUNT(company_id) BETWEEN 3 AND 5 THEN 'Medium Industry'
-        ELSE 'Small Industry'
-    END AS industry_size
-FROM 
-    fortune_companies
-GROUP BY 
-    industry
-HAVING 
-    COUNT(company_id) > 2;
-    
-    
+# Which company in the Retail industry has the least revenue, and what's their revenue? 
+SELECT company_name, min(revenue)
+FROM fortune_companies
+WHERE industry = 'Retail'
+;
